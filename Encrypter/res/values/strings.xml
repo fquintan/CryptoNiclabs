@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">PowerTest</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="get_level_button_text">Bateria</string>
+    <string name="encrypt_button_text">Encriptar</string>
+    <string name="desencriptar_button_text">Desencriptar</string>
+    <string name="encrypted_text_placeholder">El texto encriptado se despliega aquí</string>
+    <string-array name="algorithms">
+        <item>AES</item>
+        <item>RSA</item>
+    </string-array>
+
+</resources>
