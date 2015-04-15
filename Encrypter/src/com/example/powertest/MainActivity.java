@@ -64,7 +64,11 @@ public class MainActivity extends ActionBarActivity {
 					cipher = new RSACipher(keyPair.getPublicKey(), keyPair.getPrivateKey());
 				}
 				else{
-					
+					try {
+						cipher = new AESCipher();
+					} catch (GeneralSecurityException e) {
+						Log.e(TAG, "Failed to create AES cipher");
+					}
 				}
 			}
 

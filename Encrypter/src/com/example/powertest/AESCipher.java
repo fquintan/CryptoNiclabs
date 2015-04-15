@@ -1,19 +1,14 @@
 package com.example.powertest;
 
-import android.util.Base64;
-
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Random;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -21,37 +16,41 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import android.util.Base64;
+
 /**
  * Created by felipe on 4/13/15.
  */
-public class AESCipher {
+public class AESCipher implements com.example.powertest.Cipher{
 
     private Cipher cipher;
     private int passwordLength;
     private int saltLength;
     private int initializationVectorSeedLength;
-
-    public AESCipher()
-            throws NoSuchAlgorithmException, NoSuchPaddingException {
-        this(16, 16, 16);
-    }
-
-    public AESCipher(int passwordLength, int saltLength, int initializationVectorSeedLength)
-            throws NoSuchAlgorithmException, NoSuchPaddingException {
-
-        try {
-            this.passwordLength = passwordLength;
-            this.saltLength = saltLength;
-            this.initializationVectorSeedLength = initializationVectorSeedLength;
-            cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        } catch (NoSuchAlgorithmException noSuchAlgorithmException) {
-            throw noSuchAlgorithmException;
-        } catch (NoSuchPaddingException noSuchPaddingException) {
-            throw noSuchPaddingException;
-        }
-    }
+    
+    private int hashIterations;
+    private KeyLength keyLength;
 
     private SecretKey secretKey;
+
+    
+    public AESCipher()
+            throws GeneralSecurityException{
+        this(16, 16, 16, 10000, KeyLength.TWO_FIFTY_SIX);
+    }
+
+    public AESCipher(int passwordLength, int saltLength, int initializationVectorSeedLength, int hashIterations, KeyLength keylength)
+            throws GeneralSecurityException {
+
+        this.passwordLength = passwordLength;
+        this.saltLength = saltLength;
+        this.initializationVectorSeedLength = initializationVectorSeedLength;
+        this.hashIterations = hashIterations;
+        this.keyLength = keylength;
+        cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        generateKey();
+    }
+
 
     public SecretKey getSecretKey() {
         return secretKey;
@@ -65,17 +64,10 @@ public class AESCipher {
         return new SecretKeySpec(Base64.decode(secretKey, Base64.DEFAULT), "AES");
     }
 
-    public String encrypt(String rawText, int hashIterations, KeyLength keyLength)
-            throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
-
-        SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-        SecureRandom secureRandom = new SecureRandom();
-
+    public String encrypt(String rawText) throws IOException, GeneralSecurityException {
+    	SecureRandom secureRandom = new SecureRandom();
         byte[] seed = secureRandom.generateSeed(initializationVectorSeedLength);
         AlgorithmParameterSpec algorithmParameterSpec = new IvParameterSpec(seed);
-
-        KeySpec keySpec = new PBEKeySpec(getRandomPassword(), secureRandom.generateSeed(saltLength), hashIterations, keyLength.getBits());
-        secretKey = new SecretKeySpec(secretKeyFactory.generateSecret(keySpec).getEncoded(), "AES");
 
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, algorithmParameterSpec);
         byte[] encryptedMessageBytes = cipher.doFinal(rawText.getBytes());
@@ -87,8 +79,15 @@ public class AESCipher {
         return Base64.encodeToString(bytesToEncode, Base64.DEFAULT);
     }
 
-    public String decrypt(String encryptedText, SecretKey secretKey)
-            throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+	public void generateKey() throws GeneralSecurityException {
+		SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        SecureRandom secureRandom = new SecureRandom();
+
+		KeySpec keySpec = new PBEKeySpec(getRandomPassword(), secureRandom.generateSeed(saltLength), hashIterations, keyLength.getBits());
+        secretKey = new SecretKeySpec(secretKeyFactory.generateSecret(keySpec).getEncoded(), "AES");
+	}
+
+    public String decrypt(String encryptedText)throws IOException, GeneralSecurityException {
 
         byte[] bytesToDecode = Base64.decode(encryptedText, Base64.DEFAULT);
 
