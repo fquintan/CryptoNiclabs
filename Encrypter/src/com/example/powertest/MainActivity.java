@@ -57,18 +57,15 @@ public class MainActivity extends ActionBarActivity {
 			public void onItemSelected(AdapterView<?> parent, View view,
 					int pos, long id) {
 				String selected = parent.getItemAtPosition(pos).toString();
-				if (selected.equals("AES")){
-					
-				}
-				else if(selected.equals("RSA")){
-					cipher = new RSACipher(keyPair.getPublicKey(), keyPair.getPrivateKey());
-				}
-				else{
-					try {
+				try{
+					if (selected.equals("AES")){
 						cipher = new AESCipher();
-					} catch (GeneralSecurityException e) {
-						Log.e(TAG, "Failed to create AES cipher");
 					}
+					else if(selected.equals("RSA")){
+						cipher = new RSACipher(keyPair.getPublicKey(), keyPair.getPrivateKey());
+					}
+				}catch(Exception e){
+					Log.e(TAG, "Failed to create " + selected + " cipher");
 				}
 			}
 

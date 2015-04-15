@@ -4,12 +4,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
 
 import org.apache.commons.io.IOUtils;
 
@@ -22,7 +24,11 @@ public class RSACipher implements com.example.powertest.Cipher {
     private PublicKey publicKey;
     private PrivateKey privateKey;
     
-    public RSACipher(PublicKey publicKey, PrivateKey privateKey){
+    private Cipher cipher;
+    
+    public RSACipher(PublicKey publicKey, PrivateKey privateKey) throws GeneralSecurityException{
+    	cipher = Cipher.getInstance(transformation);
+        
     	this.privateKey = privateKey;
     	this.publicKey = publicKey;
     }
@@ -54,13 +60,13 @@ public class RSACipher implements com.example.powertest.Cipher {
 	}
 
 	public RSACipher(String publicKeyPath, String privateKeyPath) throws IOException, GeneralSecurityException{
+		cipher = Cipher.getInstance(transformation);
     	setPublicKey(publicKeyPath);
     	setPrivateKey(privateKeyPath);
     }
     
 	@Override
 	public String encrypt(String rawText) throws IOException, GeneralSecurityException  {
-        Cipher cipher = Cipher.getInstance(transformation);
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
         return Base64.encodeToString(cipher.doFinal(rawText.getBytes(encoding)), Base64.DEFAULT);
@@ -68,8 +74,7 @@ public class RSACipher implements com.example.powertest.Cipher {
 
 	@Override
 	public String decrypt(String encryptedText) throws IOException, GeneralSecurityException  {
-		Cipher cipher = Cipher.getInstance(transformation);
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+		cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
         return new String(cipher.doFinal(Base64.decode(encryptedText, Base64.DEFAULT)), encoding);
 
