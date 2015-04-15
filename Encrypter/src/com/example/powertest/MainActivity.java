@@ -13,11 +13,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends ActionBarActivity {
 	private final String TAG = "MainActivity";
@@ -28,6 +31,8 @@ public class MainActivity extends ActionBarActivity {
 	
     private final String transformation = "RSA/ECB/PKCS1Padding";
     private final String encoding = "UTF-8";
+    
+    private Cipher cipher;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +51,30 @@ public class MainActivity extends ActionBarActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 // Apply the adapter to the spinner
         spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+  
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view,
+					int pos, long id) {
+				String selected = parent.getItemAtPosition(pos).toString();
+				if (selected.equals("AES")){
+					
+				}
+				else if(selected.equals("RSA")){
+					cipher = new RSACipher(keyPair.getPublicKey(), keyPair.getPrivateKey());
+				}
+				else{
+					
+				}
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent) {
+				// TODO Apéndice de método generado automáticamente
+				
+			}
+        	 
+        	});
     }
 
 
@@ -58,19 +87,18 @@ public class MainActivity extends ActionBarActivity {
 			
 			@Override
 			public void onClick(View v) {
-				RSACipher cipher = new RSACipher();
 				EditText rawTextContainer = (EditText) findViewById(R.id.rawText);
 				String rawText = rawTextContainer.getText().toString();
 				String encryptedText = "Encryption Failed";
 				try {
-					encryptedText = cipher.encrypt(rawText, keyPair.getPublicKey(), transformation, encoding);
+					encryptedText = cipher.encrypt(rawText);
 				} catch (Exception e) {
 					Log.d(TAG, "Encryption Failed");
 				}
 				TextView encryptedTextView = (TextView) findViewById(R.id.encryptedText);
 				encryptedTextView.setText(encryptedText);
 				try {
-					Log.d(TAG, "Decripted: " + cipher.decrypt(encryptedText, keyPair.getPrivateKey(), transformation, encoding));
+					Log.d(TAG, "Decripted: " + cipher.decrypt(encryptedText));
 				} catch (Exception e) {
 					Log.d(TAG, "Failed to decrypt");
 				}

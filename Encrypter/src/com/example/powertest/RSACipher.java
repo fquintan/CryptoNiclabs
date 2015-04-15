@@ -15,48 +15,64 @@ import org.apache.commons.io.IOUtils;
 
 import android.util.Base64;
 
-public class RSACipher {
-	
+public class RSACipher implements com.example.powertest.Cipher {
+	private final String transformation = "RSA/ECB/PKCS1Padding";
+    private final String encoding = "UTF-8";
     
-    public String encrypt(String rawText, String publicKeyPath, String transformation, String encoding)
-            throws IOException, GeneralSecurityException {
-        
-        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(IOUtils.toByteArray(new FileInputStream(publicKeyPath)));
-
-        Cipher cipher = Cipher.getInstance(transformation);
-        cipher.init(Cipher.ENCRYPT_MODE, KeyFactory.getInstance("RSA").generatePublic(x509EncodedKeySpec));
-
-        return Base64.encodeToString(cipher.doFinal(rawText.getBytes(encoding)), Base64.DEFAULT);
+    private PublicKey publicKey;
+    private PrivateKey privateKey;
+    
+    public RSACipher(PublicKey publicKey, PrivateKey privateKey){
+    	this.privateKey = privateKey;
+    	this.publicKey = publicKey;
     }
     
-    public String encrypt(String rawText, PublicKey publicKey, String transformation, String encoding)
-            throws IOException, GeneralSecurityException {
+    public PublicKey getPublicKey() {
+		return publicKey;
+	}
 
+	public void setPublicKey(PublicKey publicKey) {
+		this.publicKey = publicKey;
+	}
+	
+	public void setPublicKey(String publicKeyPath) throws IOException, GeneralSecurityException{
+		X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(IOUtils.toByteArray(new FileInputStream(publicKeyPath)));
+    	publicKey = KeyFactory.getInstance("RSA").generatePublic(x509EncodedKeySpec);
+	}
+
+	public PrivateKey getPrivateKey() {
+		return privateKey;
+	}
+
+	public void setPrivateKey(PrivateKey privateKey) {
+		this.privateKey = privateKey;
+	}
+	
+	public void setPrivateKey(String privateKeyPath) throws IOException, GeneralSecurityException{
+		PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(IOUtils.toByteArray(new FileInputStream(privateKeyPath)));
+    	privateKey = KeyFactory.getInstance("RSA").generatePrivate(pkcs8EncodedKeySpec);
+	}
+
+	public RSACipher(String publicKeyPath, String privateKeyPath) throws IOException, GeneralSecurityException{
+    	setPublicKey(publicKeyPath);
+    	setPrivateKey(privateKeyPath);
+    }
+    
+	@Override
+	public String encrypt(String rawText) throws IOException, GeneralSecurityException  {
         Cipher cipher = Cipher.getInstance(transformation);
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
         return Base64.encodeToString(cipher.doFinal(rawText.getBytes(encoding)), Base64.DEFAULT);
-    }
+	}
 
-    public String decrypt(String cipherText, String privateKeyPath, String transformation, String encoding)
-            throws IOException, GeneralSecurityException {
-
-        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(IOUtils.toByteArray(new FileInputStream(privateKeyPath)));
-
-        Cipher cipher = Cipher.getInstance(transformation);
-        cipher.init(Cipher.DECRYPT_MODE, KeyFactory.getInstance("RSA").generatePrivate(pkcs8EncodedKeySpec));
-
-        
-        return new String(cipher.doFinal(Base64.decode(cipherText, Base64.DEFAULT)), encoding);
-    }
-    
-    public String decrypt(String cipherText, PrivateKey privateKey, String transformation, String encoding)
-            throws IOException, GeneralSecurityException {
-
-        Cipher cipher = Cipher.getInstance(transformation);
+	@Override
+	public String decrypt(String encryptedText) throws IOException, GeneralSecurityException  {
+		Cipher cipher = Cipher.getInstance(transformation);
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
-        return new String(cipher.doFinal(Base64.decode(cipherText, Base64.DEFAULT)), encoding);
-    }
+        return new String(cipher.doFinal(Base64.decode(encryptedText, Base64.DEFAULT)), encoding);
+
+	}
 
 }
