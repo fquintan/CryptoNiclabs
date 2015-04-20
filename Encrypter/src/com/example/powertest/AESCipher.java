@@ -1,6 +1,7 @@
 package com.example.powertest;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -64,19 +65,19 @@ public class AESCipher implements com.example.powertest.Cipher{
         return new SecretKeySpec(Base64.decode(secretKey, Base64.DEFAULT), "AES");
     }
 
-    public String encrypt(String rawText) throws IOException, GeneralSecurityException {
+    public BigInteger encrypt(BigInteger raw) throws IOException, GeneralSecurityException {
     	SecureRandom secureRandom = new SecureRandom();
         byte[] seed = secureRandom.generateSeed(initializationVectorSeedLength);
         AlgorithmParameterSpec algorithmParameterSpec = new IvParameterSpec(seed);
 
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, algorithmParameterSpec);
-        byte[] encryptedMessageBytes = cipher.doFinal(rawText.getBytes());
+        byte[] encryptedMessageBytes = cipher.doFinal(raw.toByteArray());
 
         byte[] bytesToEncode = new byte[seed.length + encryptedMessageBytes.length];
         System.arraycopy(seed, 0, bytesToEncode, 0, seed.length);
         System.arraycopy(encryptedMessageBytes, 0, bytesToEncode, seed.length, encryptedMessageBytes.length);
 
-        return Base64.encodeToString(bytesToEncode, Base64.DEFAULT);
+        return new BigInteger(bytesToEncode);
     }
 
 	public void generateKey() throws GeneralSecurityException {
@@ -87,9 +88,9 @@ public class AESCipher implements com.example.powertest.Cipher{
         secretKey = new SecretKeySpec(secretKeyFactory.generateSecret(keySpec).getEncoded(), "AES");
 	}
 
-    public String decrypt(String encryptedText)throws IOException, GeneralSecurityException {
+    public BigInteger decrypt(BigInteger encrypted)throws IOException, GeneralSecurityException {
 
-        byte[] bytesToDecode = Base64.decode(encryptedText, Base64.DEFAULT);
+        byte[] bytesToDecode = encrypted.toByteArray();
 
         byte[] emptySeed = new byte[initializationVectorSeedLength];
         System.arraycopy(bytesToDecode, 0, emptySeed, 0, initializationVectorSeedLength);
@@ -100,7 +101,7 @@ public class AESCipher implements com.example.powertest.Cipher{
         byte[] messageDecryptedBytes = new byte[messageDecryptedBytesLength];
         System.arraycopy(bytesToDecode, initializationVectorSeedLength, messageDecryptedBytes, 0, messageDecryptedBytesLength);
 
-        return new String(cipher.doFinal(messageDecryptedBytes));
+        return new BigInteger(cipher.doFinal(messageDecryptedBytes));
     }
 
     public enum KeyLength {

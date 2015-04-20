@@ -1,6 +1,7 @@
 package com.example.powertest;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 
@@ -85,21 +86,30 @@ public class MainActivity extends ActionBarActivity {
         getMenuInflater().inflate(R.menu.main, menu);
         Button b = (Button) findViewById(R.id.encryptButton);
         b.setOnClickListener(new OnClickListener() {
-			
+
 			@Override
 			public void onClick(View v) {
 				EditText rawTextContainer = (EditText) findViewById(R.id.rawText);
 				String rawText = rawTextContainer.getText().toString();
+                BigInteger rawAsBigInt = new BigInteger(rawText);
 				String encryptedText = "Encryption Failed";
+                BigInteger encryptedAsBigInt = BigInteger.ONE;
 				try {
-					encryptedText = cipher.encrypt(rawText);
+					encryptedAsBigInt = cipher.encrypt(rawAsBigInt);
+                    encryptedText = encryptedAsBigInt.toString();
 				} catch (Exception e) {
 					Log.d(TAG, "Encryption Failed");
 				}
 				TextView encryptedTextView = (TextView) findViewById(R.id.encryptedText);
 				encryptedTextView.setText(encryptedText);
 				try {
-					Log.d(TAG, "Decripted: " + cipher.decrypt(encryptedText));
+                    BigInteger decrypted = cipher.decrypt(encryptedAsBigInt);
+                    if(decrypted.equals(rawAsBigInt)){
+                        Log.d(TAG, "Decryption was correct");
+                    }
+                    else{
+                        Log.d(TAG, "Decryption was incorrect");
+                    }
 				} catch (Exception e) {
 					Log.d(TAG, "Failed to decrypt");
 				}

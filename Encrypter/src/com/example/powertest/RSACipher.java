@@ -2,6 +2,7 @@ package com.example.powertest;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -66,17 +67,17 @@ public class RSACipher implements com.example.powertest.Cipher {
     }
     
 	@Override
-	public String encrypt(String rawText) throws IOException, GeneralSecurityException  {
+	public BigInteger encrypt(BigInteger raw) throws IOException, GeneralSecurityException  {
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 
-        return Base64.encodeToString(cipher.doFinal(rawText.getBytes(encoding)), Base64.DEFAULT);
+        return new BigInteger(cipher.doFinal(raw.toByteArray()));
 	}
 
 	@Override
-	public String decrypt(String encryptedText) throws IOException, GeneralSecurityException  {
+	public BigInteger decrypt(BigInteger encrypted) throws IOException, GeneralSecurityException  {
 		cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
-        return new String(cipher.doFinal(Base64.decode(encryptedText, Base64.DEFAULT)), encoding);
+        return new BigInteger(cipher.doFinal(encrypted.toByteArray()));
 
 	}
 
